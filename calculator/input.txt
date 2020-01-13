@@ -1,0 +1,13 @@
+M R1 0x60
+M R2 0xf
+B R1 R2 13
+C R1 R2
+B R0 1 7
+B R0 -1 10
+- R1 R2
+M R1 R0
+J 3
+- R2 R1
+M R2 R0
+J 3
+H
