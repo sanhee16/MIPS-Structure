@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "header.h"
-char* path = "gcd.bin";
+char* path = "./test_prog/input4.bin";
 
 int opcode;
 int rs,rt,rd;
@@ -124,7 +124,7 @@ void main(int argc, char *argv[]){
                         | (val&0xFF0000) >> 8
                         | (val&0xFF000000) >> 24;
                 //     printf("0x%08x --> 0x%08x \n", val, inst);
-                printf("%08x \n",inst);
+                //printf("%08x \n",inst);
                 memory[i] = inst;
                 i++;
         }
@@ -140,14 +140,13 @@ void main(int argc, char *argv[]){
                 //if(cycle==100)break;
                 //if pc meet 0xffffffff -> go out of loop
 
-                printf("\n-----------------[cycle %d]---------------\n",cycle);
+                //printf("\n-----------------[cycle %d]---------------\n",cycle);
                 if((pc/4)>i) break;
 
                 //print pc value
-                printf("[PC] \t0x%08x\n",pc);
-
+                //printf("[PC] \t0x%08x\n",pc);
                 fetch();
-                printf("[inst]\t0x%08x \n", inst);
+                //printf("[inst]\t0x%08x \n", inst);
 
                 if(inst!=0x0){ // not nop
                         decode(inst);
@@ -158,9 +157,11 @@ void main(int argc, char *argv[]){
                         N++;
                 }
                 else{
-                        printf("nop \n"); pc = pc+4;
+                        //printf("nop \n");
+                        pc = pc+4;
                         R++;
-                        N++;}
+                        N++;
+                }
         } // while(1)
 
         //end of file, print result(V0)
@@ -244,8 +245,11 @@ void execute(){ // ALU, result means ALU result
                 case beq: //beq
                         if(aluData1==aluData2){
                                 bcond = 1;
-                                B++;}
-                        else{bcond = 0;}
+                                B++;
+                        }
+                        else{
+                                bcond = 0;
+                        }
                         break;
 
                 case bne: //bne
@@ -253,7 +257,9 @@ void execute(){ // ALU, result means ALU result
                                 bcond =1;
                                 B++;
                         }
-                        else{bcond = 0;}
+                        else{
+                                bcond = 0;
+                        }
                         break;
 
                 case j: //j
@@ -370,12 +376,14 @@ void execute(){ // ALU, result means ALU result
                                 case subu: //subu
                                         result=aluData1-aluData2;
                                         break;
+
                                 case jalr: // Rtype;
                                         result=aluData1;
+                                        break;
                         }//R_type
 
         }//end of switch(opcode)
-        print_inst(); // printf instruction
+        //print_inst(); // printf instruction
         br_taken = bcond&branch; // for branch
         set_MUX(); // because of branch, set again
         return ;
@@ -385,10 +393,11 @@ void execute(){ // ALU, result means ALU result
 
 void signExtImm(){
         inst_ext = imm; // short->int(16 bits -> 32 bits)
-        if((imm >> 15)==1){ //negative
-                inst_ext = imm|0xffff0000;}
-        else{ // postive
-                inst_ext = imm;}
+        if((imm >> 15)==1) //negative
+                inst_ext = imm|0xffff0000;
+
+        else // postive
+                inst_ext = imm;
         return ;
 }
 
@@ -407,18 +416,19 @@ void branchAddress(){
 void setALUdata(){
         aluData1 = readData1;
         if(alu_mux==1){  // I-type
-                if((opcode==andi)||(opcode==ori)){
-                        zeroExtImm();}
-                else{signExtImm();}
+                if((opcode==andi)||(opcode==ori))
+                        zeroExtImm();
+                else
+                        signExtImm();
 
                 aluData2 = inst_ext;
         }
-
         else{ //R-type
                 aluData2 = readData2;
         }
 
-        if((opcode==bne)||(opcode==beq)){branchAddress();}
+        if((opcode==bne)||(opcode==beq))
+                branchAddress();
 }
 
 
@@ -427,19 +437,19 @@ void result_memory(){
         address_mem = result;
         writeData_mem = readData2;
 
-        if(memWrite==1){ // store
+        if(memWrite==1) // store
                 readData_mem = address_mem;
-        }
 
-        if(memRead==1){ //load
+
+        if(memRead==1) //load
                 readData_mem = memory[address_mem];
-        }
+
 
         ///////////////////mem to Reg////////////////////
-        if(mem_mux == 1){ // load
-                writeData = readData_mem;}
-        else{  //R, I type(store = *)
-                writeData = result;}
+        if(mem_mux == 1) // load
+                writeData = readData_mem;
+        else  //R, I type(store = *)
+                writeData = result;
 
 }
 
@@ -450,26 +460,29 @@ void write_back(){
 
                 if((opcode==jal)){
                         reg[31]=pc+8; // r[31] update
-                        printf("r[31] = 0x%x \n",reg[31]);}
-
+                        //printf("r[31] = 0x%x \n",reg[31]);
+                }
                 else if(funct==jalr){ // instead of 8, insert 4
                         reg[rd]=pc+4; // r[31] update
-                        printf("r[31] = 0x%x \n",reg[31]);}
+                        //printf("r[31] = 0x%x \n",reg[31]);
+                }
 
                 else{ //register update
                         reg[writeReg] = writeData;
-                        printf("r[%d] =(0x%08x)\n", writeReg,  writeData);
+                        //printf("r[%d] =(0x%08x)\n", writeReg,  writeData);
                 }
         }
         //memory update//
         if(memWrite==1){//store
-                memory[readData_mem]=writeData_mem;     M++;
-                printf("store to memory, M[0x%08x] = r[%d] = %08x\n", readData_mem, readReg2 ,writeData_mem);
+                memory[readData_mem]=writeData_mem;
+                M++;
+                //printf("store to memory, M[0x%08x] = r[%d] = %08x\n", readData_mem, readReg2 ,writeData_mem);
         }
 
         if(memRead==1){ //load
-                reg[writeReg]=writeData;        M++;
-                printf("load from memory, r[%d] = 0x%08x\n", writeReg,writeData);
+                reg[writeReg]=writeData;
+                M++;
+                //printf("load from memory, r[%d] = 0x%08x\n", writeReg,writeData);
         }
 
         //pc update
@@ -493,13 +506,15 @@ void add_pc(){ // regard with PC register
                 jumpAddress=((pc&0xf0000000)|(address));
         }
         //////////////branch , prsrc2/////////////
-        if(branch_mux == 1){ // branch(beq or bne)
-                pc1 = ALUresult;}
-        else{pc1 = pc0;} // except branch or jump
+        if(branch_mux == 1) // branch(beq or bne)
+                pc1 = ALUresult;
+        else
+                pc1 = pc0; // except branch or jump
         //////////////////jump , prsrc1//////////////
         if(pc_mux==1) //  = jump
-        {pc2 = jumpAddress;}
-        else{pc2 = pc1;} // except jump : branch or R/I type
+                pc2 = jumpAddress;
+        else
+                pc2 = pc1; // except jump : branch or R/I type
 
         pc=pc2; // pc update
         return ;
@@ -525,7 +540,7 @@ void control(){
         if((opcode==bne)||(opcode==beq)){branch=1;}
         else{branch = 0;}
         //print control signal
-        printf("regdst %d, alusrc %d, memtoreg %d, regwrite %d, memread %d, memwrite %d, jump %d, branch %d \n", regDst,aluSrc, memtoReg,regWrite, memRead, memWrite, jump, branch );
+        //printf("regdst %d, alusrc %d, memtoreg %d, regwrite %d, memread %d, memwrite %d, jump %d, branch %d \n", regDst,aluSrc, memtoReg,regWrite, memRead, memWrite, jump, branch );
 
         return ;
 }
@@ -568,6 +583,5 @@ void setting(){
         set_MUX(); // set mux
         set_reg(); // set register
         setALUdata(); // set aluData
-
 
 }
