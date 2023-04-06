@@ -4,7 +4,7 @@
 C, Linux, mips Assembly   
 
 ### sample input files  
-다음 7개의 코드(mips 코드를 cross compile해서 mips코드로 바꿈)를 읽어서 실행시키는 simulator
+다음 7개의 mips코드를 읽어서 실행시키는 simulator
 1. fib : Fibonacci  
 2. gcd : greatest common divisor  
 3. simple : return void function  
